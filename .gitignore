@@ -1,51 +1,16 @@
 ```
 # Dependencies
-backend/venv/
-backend/.venv/
-frontend/node_modules/
+node_modules/
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-.venv/
-venv/
-requirements.txt.bak
-
-# Build artifacts
-backend/dist/
-backend/build/
-frontend/dist/
-frontend/build/
-
-# Logs
+# Logs and temp files
 *.log
-*.out
+*.tmp
 
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Editors
 .vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Python cache
-.mypy_cache/
-.pytest_cache/
 ```
