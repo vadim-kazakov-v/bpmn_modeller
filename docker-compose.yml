@@ -1,19 +1,20 @@
 version: '3.8'
 
 services:
-  frontend:
+  flask_ui:
     build: 
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile.flask_ui
     ports:
-      - "3000:3000"
+      - "5000:5000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./flask_ui.py:/app/flask_ui.py
+      - ./templates:/app/templates
     depends_on:
       - backend
     environment:
-      - NODE_ENV=development
+      - FLASK_ENV=development
+      - DOCKER_ENV=true
 
   backend:
     build: 

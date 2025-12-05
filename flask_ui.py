@@ -4,8 +4,16 @@ import json
 
 app = Flask(__name__)
 
-# The API endpoint for the BPMN generator
-BPMN_API_URL = "http://localhost:8000/generate-bpmn"
+import os
+
+# The API endpoint for the BPMN generator - configurable for Docker
+BPMN_API_URL = os.environ.get('BPMN_API_URL', 'http://localhost:8000/generate-bpmn')
+# In Docker, the backend service will be accessible as 'http://backend:8000/generate-bpmn'
+# but we'll use the service name from environment variable
+if os.environ.get('DOCKER_ENV') == 'true':
+    BPMN_API_URL = "http://backend:8000/generate-bpmn"
+else:
+    BPMN_API_URL = os.environ.get('BPMN_API_URL', 'http://localhost:8000/generate-bpmn')
 
 @app.route('/')
 def index():
