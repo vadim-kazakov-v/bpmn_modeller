@@ -1,10 +1,19 @@
 FROM node:18-alpine
 
+# Install python and build tools for native dependencies
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 
-# Install dependencies
+# First, copy only package files to leverage Docker layer caching
 COPY frontend/package*.json ./
-RUN npm install
+
+# Configure npm for memory-constrained environments
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+RUN npm config set legacy-peer-deps=true
+
+# Install dependencies with memory optimization
+RUN npm install --no-audit --no-fund --prefer-offline --loglevel=error --progress=false
 
 # Copy application code
 COPY frontend/ .
