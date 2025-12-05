@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPMN 2.0 Generator from YAML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-header h2 {
+            color: #495057;
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .editor-container, .preview-container {
+            padding: 20px;
+            height: 500px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            background-color: #f8f9fa;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #bpmn-canvas {
+            flex: 1;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: #6c757d;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .documentation-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .documentation-section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .doc-content h3 {
+            color: #6f42c1;
+            margin: 20px 0 10px 0;
+        }
+
+        .doc-content pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            font-size: 0.9rem;
+        }
+
+        .doc-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .doc-content li {
+            margin-bottom: 5px;
+        }
+
+        .element-type {
+            font-weight: bold;
+            color: #6f42c1;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-project-diagram"></i> BPMN 2.0 Generator from YAML</h1>
+            <p>Define your workflow in YAML and generate BPMN 2.0 diagrams</p>
+        </header>
+
+        <div class="main-container">
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-code"></i> YAML Input</h2>
+                    <button id="generate-btn" class="btn btn-primary">
+                        <i class="fas fa-cogs"></i> <span id="generate-text">Generate BPMN</span>
+                        <span id="generate-spinner" class="spinner hidden"></span>
+                    </button>
+                </div>
+                <div class="editor-container">
+                    <textarea id="yaml-input" placeholder="Enter your YAML workflow definition here...">{{ default_yaml }}</textarea>
+                </div>
+                <div id="error-message" class="error-message hidden"></div>
+                <div id="success-message" class="success-message hidden"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-project-diagram"></i> BPMN Diagram Preview</h2>
+                    <button id="download-btn" class="btn btn-success" disabled>
+                        <i class="fas fa-download"></i> Download BPMN
+                    </button>
+                </div>
+                <div class="preview-container">
+                    <div id="bpmn-canvas">
+                        <div class="loading">
+                            <i class="fas fa-info-circle"></i> Enter YAML and click "Generate BPMN" to see the diagram
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="documentation-section">
+            <h2><i class="fas fa-book"></i> YAML Format Documentation</h2>
+            <div class="doc-content">
+                <h3><i class="fas fa-folder"></i> Structure:</h3>
+                <pre>name: "Workflow Name"
+pools:
+  - id: "Pool ID"
+    name: "Pool Name"
+    lanes:
+      - id: "Lane ID"
+        name: "Lane Name"
+        elements:
+          - id: "Element ID"
+            type: "elementType"
+            name: "Element Name"
+            # Additional properties based on element type
+    flows:
+      - id: "Flow ID"
+        source: "Source Element ID"
+        target: "Target Element ID"</pre>
+
+                <h3><i class="fas fa-list"></i> Element Types:</h3>
+                <ul>
+                    <li><span class="element-type">startEvent</span>: Process start point</li>
+                    <li><span class="element-type">endEvent</span>: Process end point</li>
+                    <li><span class="element-type">task</span>: Manual task</li>
+                    <li><span class="element-type">serviceTask</span>: Automated task</li>
+                    <li><span class="element-type">userTask</span>: User task</li>
+                    <li><span class="element-type">manualTask</span>: Manual task</li>
+                    <li><span class="element-type">exclusiveGateway</span>: Decision point</li>
+                    <li><span class="element-type">parallelGateway</span>: Split/join point</li>
+                    <li><span class="element-type">inclusiveGateway</span>: Conditional gateway</li>
+                    <li><span class="element-type">intermediateCatchEvent</span>: Intermediate event</li>
+                    <li><span class="element-type">intermediateThrowEvent</span>: Intermediate event</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/bpmn-js@16.0.0/dist/bpmn-viewer.development.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const yamlInput = document.getElementById('yaml-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const bpmnCanvas = document.getElementById('bpmn-canvas');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            const generateText = document.getElementById('generate-text');
+            const generateSpinner = document.getElementById('generate-spinner');
+
+            let currentBpmnXml = '';
+            let bpmnViewer = null;
+
+            generateBtn.addEventListener('click', generateBpmn);
+            downloadBtn.addEventListener('click', downloadBpmn);
+
+            function showLoading() {
+                generateBtn.disabled = true;
+                generateText.textContent = 'Generating...';
+                generateSpinner.classList.remove('hidden');
+            }
+
+            function hideLoading() {
+                generateBtn.disabled = false;
+                generateText.textContent = 'Generate BPMN';
+                generateSpinner.classList.add('hidden');
+            }
+
+            function showError(message) {
+                errorMessage.textContent = `Error: ${message}`;
+                errorMessage.classList.remove('hidden');
+                successMessage.classList.add('hidden');
+            }
+
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+            }
+
+            function hideMessages() {
+                errorMessage.classList.add('hidden');
+                successMessage.classList.add('hidden');
+            }
+
+            async function generateBpmn() {
+                const yamlContent = yamlInput.value.trim();
+                
+                if (!yamlContent) {
+                    showError('Please enter YAML content');
+                    return;
+                }
+
+                showLoading();
+                hideMessages();
+
+                try {
+                    const response = await fetch('/generate-bpmn', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ yaml: yamlContent })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        currentBpmnXml = data.bpmn;
+                        
+                        // Update the canvas with the BPMN diagram
+                        if (bpmnViewer) {
+                            bpmnViewer.destroy();
+                        }
+                        
+                        bpmnCanvas.innerHTML = '<div id="canvas" style="width:100%; height:100%;"></div>';
+                        const canvasDiv = document.getElementById('canvas');
+                        
+                        bpmnViewer = new BpmnJS({
+                            container: canvasDiv
+                        });
+                        
+                        bpmnViewer.importXML(data.bpmn)
+                            .then(function(result) {
+                                const { warnings } = result;
+                                if (warnings && warnings.length) {
+                                    console.log('BPMN import warnings:', warnings);
+                                }
+                                bpmnViewer.get('canvas').zoom('fit-viewport');
+                                showSuccess('BPMN diagram generated successfully!');
+                                downloadBtn.disabled = false;
+                            })
+                            .catch(function(err) {
+                                console.error('BPMN import error:', err);
+                                showError('Error displaying BPMN diagram: ' + err.message);
+                            });
+                    } else {
+                        showError(data.error || 'Unknown error occurred');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('Network error: ' + error.message);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            function downloadBpmn() {
+                if (!currentBpmnXml) {
+                    alert('No BPMN XML available to download');
+                    return;
+                }
+
+                const blob = new Blob([currentBpmnXml], { type: 'application/xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'diagram.bpmn';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
