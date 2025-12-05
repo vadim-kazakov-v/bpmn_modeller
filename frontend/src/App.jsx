@@ -81,9 +81,13 @@ pools:
                   if (warnings && warnings.length) {
                     console.log('BPMN import warnings:', warnings);
                   }
+                  // Fit the diagram to the viewport after import
                   viewer.get('canvas').zoom('fit-viewport');
+                  viewer.get('canvas').scroll({ x: 0, y: 0 });
                 }).catch(function(err) {
                   console.error('BPMN import error:', err);
+                  // Display error message in the canvas
+                  document.getElementById('canvas').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red; font-size: 18px;">Error displaying BPMN diagram: ' + err.message + '</div>';
                 });
               </script>
             </body>
@@ -194,7 +198,8 @@ pools:
     flows:
       - id: "Flow ID"
         source: "Source Element ID"
-        target: "Target Element ID"`}
+        target: "Target Element ID"`
+}
           </pre>
           
           <h3>Element Types:</h3>
