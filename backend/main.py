@@ -165,19 +165,26 @@ def generate_bpmn_from_yaml(yaml_content: str) -> str:
     bpmn_di = create_bpmn_element("BPMNDiagram", id=f"BPMNDiagram_{uuid.uuid4()}", name=data.get('name', 'Diagram'))
     plane = create_bpmn_element("BPMNPlane", id=f"BPMNPlane_{uuid.uuid4()}", bpmnElement=process_id)
     
-    # Add basic shape and edge definitions for visualization
+    # Add basic shape and edge definitions for visualization with proper positioning
+    element_positions = {}
+    x_pos = 100
+    y_pos = 100
     for pool_data in pools_data:
         lanes_data = pool_data.get('lanes', [])
         for lane_data in lanes_data:
             elements = lane_data.get('elements', [])
-            for element in elements:
+            for i, element in enumerate(elements):
                 element_id = element['id']
+                
+                # Calculate position based on element index to avoid overlap
+                current_x = x_pos + (i * 150)  # Space elements horizontally
+                current_y = y_pos
                 
                 # Add BPMN shape for the element
                 bounds = create_bpmn_element(
                     "Bounds", 
-                    x="100", 
-                    y="100", 
+                    x=str(current_x), 
+                    y=str(current_y), 
                     width="100", 
                     height="80"
                 )
@@ -188,12 +195,17 @@ def generate_bpmn_from_yaml(yaml_content: str) -> str:
                 )
                 shape.append(bounds)
                 plane.append(shape)
+                
+                # Store position for potential edge calculations
+                element_positions[element_id] = (current_x, current_y)
     
-    # Add flows to BPMNDI
+    # Add flows to BPMNDI with proper waypoints
     for pool_data in pools_data:
         flows_data = pool_data.get('flows', [])
         for flow in flows_data:
             flow_id = flow.get('id', f"Flow_{uuid.uuid4()}")
+            source_ref = flow['source']
+            target_ref = flow['target']
             
             edge = create_bpmn_element(
                 "BPMNEdge", 
@@ -201,11 +213,27 @@ def generate_bpmn_from_yaml(yaml_content: str) -> str:
                 bpmnElement=flow_id
             )
             
-            # Add waypoint elements for the edge
-            waypoint1 = create_bpmn_element("waypoint", x="150", y="140")
-            waypoint2 = create_bpmn_element("waypoint", x="250", y="140")
-            edge.append(waypoint1)
-            edge.append(waypoint2)
+            # Add waypoint elements for the edge based on element positions
+            source_pos = element_positions.get(source_ref)
+            target_pos = element_positions.get(target_ref)
+            
+            if source_pos and target_pos:
+                # Calculate midpoints for better visualization
+                source_x, source_y = source_pos
+                target_x, target_y = target_pos
+                
+                # Create waypoints from source to target
+                waypoint_start = create_bpmn_element("waypoint", x=str(source_x + 100), y=str(source_y + 40))
+                waypoint_end = create_bpmn_element("waypoint", x=str(target_x), y=str(target_y + 40))
+                
+                edge.append(waypoint_start)
+                edge.append(waypoint_end)
+            else:
+                # Fallback to default positions if positions not found
+                waypoint1 = create_bpmn_element("waypoint", x="150", y="140")
+                waypoint2 = create_bpmn_element("waypoint", x="250", y="140")
+                edge.append(waypoint1)
+                edge.append(waypoint2)
             
             plane.append(edge)
     

@@ -86,8 +86,9 @@ pools:
                   viewer.get('canvas').scroll({ x: 0, y: 0 });
                 }).catch(function(err) {
                   console.error('BPMN import error:', err);
+                  console.error('Error details:', err.warnings || 'No specific warnings');
                   // Display error message in the canvas
-                  document.getElementById('canvas').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red; font-size: 18px;">Error displaying BPMN diagram: ' + err.message + '</div>';
+                  document.getElementById('canvas').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red; font-size: 18px; text-align: center;"><div><h3>BPMN Import Error</h3><p>' + err.message + '</p><p>Check console for details</p></div></div>';
                 });
               </script>
             </body>
