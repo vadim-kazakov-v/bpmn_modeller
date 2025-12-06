@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BPMN Viewer Test</title>
+    <script src="https://unpkg.com/bpmn-js@8.9.0/dist/bpmn-viewer.development.js"></script>
+    <style>
+        #canvas {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>BPMN Viewer Test</h1>
+    <div id="canvas"></div>
+
+    <script>
+        const bpmnViewer = new BpmnJS({
+            container: '#canvas'
+        });
+
+        // Load the corrected BPMN diagram
+        fetch('./corrected_bpmn.xml')
+            .then(response => response.text())
+            .then(bpmnDiagram => {
+                return bpmnViewer.importXML(bpmnDiagram);
+            })
+            .then(result => {
+                console.log('Success!');
+                const { warnings } = result;
+                
+                if (warnings && warnings.length) {
+                    console.log('Warnings:', warnings);
+                }
+                
+                // Zoom to fit the diagram
+                bpmnViewer.get('canvas').zoom('fit-viewport');
+            })
+            .catch(err => {
+                console.error('BPMN import error:', err);
+            });
+    </script>
+</body>
+</html>
