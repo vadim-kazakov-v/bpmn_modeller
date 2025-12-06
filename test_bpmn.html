@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>BPMN Viewer Test</title>
-    <script src="https://unpkg.com/bpmn-js@8.9.0/dist/bpmn-viewer.development.js"></script>
+    <script src="https://unpkg.com/bpmn-js@16.0.0/dist/bpmn-viewer.development.js"></script>
     <style>
         #canvas {
             width: 100%;
@@ -22,12 +22,19 @@
 
         // Load the corrected BPMN diagram
         fetch('./corrected_bpmn.xml')
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(bpmnDiagram => {
+                console.log('XML loaded successfully, attempting to import...');
+                console.log('XML content snippet:', bpmnDiagram.substring(0, 200));
                 return bpmnViewer.importXML(bpmnDiagram);
             })
             .then(result => {
-                console.log('Success!');
+                console.log('Import successful!', result);
                 const { warnings } = result;
                 
                 if (warnings && warnings.length) {
@@ -39,6 +46,17 @@
             })
             .catch(err => {
                 console.error('BPMN import error:', err);
+                console.error('Error details:', err.warnings || 'No specific warnings');
+                
+                // Show error in the canvas
+                document.getElementById('canvas').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red; font-size: 18px; text-align: center;">
+                        <div>
+                            <h3>BPMN Import Error</h3>
+                            <p>${err.message}</p>
+                            <p>Check console for details</p>
+                        </div>
+                    </div>`;
             });
     </script>
 </body>
